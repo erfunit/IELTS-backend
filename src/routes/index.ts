@@ -4,12 +4,14 @@ import userRouter from "./user.routes";
 import adminRouter from "./admin.routes";
 import publicRouter from "./public.routes";
 import protectedRouter from "./protected.routes";
+import bookRouter from "./book.routes";
 
 const router = Router();
 
 // Combine all route files
 router.use("/auth", authRouter);
 router.use("/users", userRouter);
+router.use("/books", bookRouter);
 router.use(adminRouter);
 router.use(publicRouter);
 router.use(protectedRouter);
