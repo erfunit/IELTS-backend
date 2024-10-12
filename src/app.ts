@@ -1,9 +1,8 @@
 import express from "express";
 import "reflect-metadata";
-import { createConnection, DataSource } from "typeorm";
+import { DataSource } from "typeorm";
 import dotenv from "dotenv";
 import router from "./routes";
-import { User } from "./entities/User";
 
 dotenv.config();
 
