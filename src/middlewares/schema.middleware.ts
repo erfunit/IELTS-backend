@@ -1,14 +1,15 @@
 import { Request, Response, NextFunction } from "express";
-import { ZodSchema } from "zod";
+import { ZodObject, ZodRawShape } from "zod";
 
 export const validateSchema =
-  (schema: ZodSchema) =>
+  (schema: ZodObject<ZodRawShape>, partial: boolean = false) =>
   (req: Request, res: Response, next: NextFunction): void => {
+    const schemaToValidate = partial ? schema.partial() : schema;
     try {
-      const parsedData = schema.parse(req.body); // Validate and parse the body
-      req.body = parsedData; // Replace body with validated data
-      next(); // Call next middleware if validation succeeds
+      const parsedData = schemaToValidate.parse(req.body);
+      req.body = parsedData;
+      next();
     } catch (error: any) {
-      res.status(400).json({ errors: error.errors }); // Return error response if validation fails
+      res.status(400).json({ errors: error.errors });
     }
   };

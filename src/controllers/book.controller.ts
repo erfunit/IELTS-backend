@@ -1,6 +1,12 @@
 import { Request, Response } from "express";
 import { Book } from "../entities/Book";
-import { createNewBook, getAllBooks } from "../services/book.service";
+import {
+  createNewBook,
+  deleteBookById,
+  getAllBooks,
+  getBookById,
+  updateBookById,
+} from "../services/book.service";
 import { controllerWrapper } from "../utils/controllerWrapper";
 
 export const createBookController = async (req: Request, res: Response) => {
@@ -9,4 +15,19 @@ export const createBookController = async (req: Request, res: Response) => {
 
 export const getAllBooksController = async (req: Request, res: Response) => {
   await controllerWrapper(res, getAllBooks);
+};
+
+export const getOneBookController = async (req: Request, res: Response) => {
+  const bookId = req.params.bookId;
+  await controllerWrapper(res, getBookById, bookId);
+};
+
+export const updateBookController = async (req: Request, res: Response) => {
+  const bookId = req.params.bookId;
+  await controllerWrapper(res, updateBookById, bookId, req.body);
+};
+
+export const deleteBookController = async (req: Request, res: Response) => {
+  const bookId = req.params.bookId;
+  await controllerWrapper(res, deleteBookById, bookId);
 };
