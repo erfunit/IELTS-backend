@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { protectedEndpoint } from "../controllers/protectedController";
-import { authMiddleware } from "../middlewares/authMiddleware";
+import { protectedEndpoint } from "../controllers/protected.controller";
+import { authMiddleware } from "../middlewares/auth.middleware";
 
 const protectedRouter = Router();
 

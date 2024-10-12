@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getMe, login, verifyOtp } from "../services/authService";
+import { getMe, login, verifyOtp } from "../services/auth.service";
 import { AuthenticatedRequest } from "../types";
 
 export const loginController = async (req: Request, res: Response) => {

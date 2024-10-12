@@ -3,10 +3,10 @@ import {
   loginController,
   verifyOtpController,
   getMeController,
-} from "../controllers/authController";
-import { authMiddleware } from "../middlewares/authMiddleware";
-import { validateSchema } from "../middlewares/schemaMiddleware";
-import { loginSchema, verifySchema } from "../schemas/authSchema";
+} from "../controllers/auth.controller";
+import { authMiddleware } from "../middlewares/auth.middleware";
+import { validateSchema } from "../middlewares/schema.middleware";
+import { loginSchema, verifySchema } from "../schemas/auth.schema";
 
 const authRouter = Router();
 
