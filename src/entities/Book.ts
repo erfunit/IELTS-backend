@@ -3,8 +3,10 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  OneToMany,
   AfterLoad,
 } from "typeorm";
+import { Test } from "./Test";
 
 @Entity("books")
 export class Book {
@@ -28,6 +30,9 @@ export class Book {
 
   @Column()
   publisher: string;
+
+  @OneToMany(() => Test, (test) => test.book)
+  tests: Test[];
 
   @CreateDateColumn()
   createdAt: Date;
