@@ -78,7 +78,7 @@ export const verifyOtp = async (phoneNumber: string, otpCode: string) => {
   const token = jwt.sign(
     { id: user.id, phoneNumber: user.phoneNumber, role: user.role },
     JWT_SECRET,
-    { expiresIn: "1h" }
+    { expiresIn: "30d" }
   );
 
   return { message: user ? "Welcome back!" : "User created", token };
