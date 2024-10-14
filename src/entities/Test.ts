@@ -5,8 +5,10 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from "typeorm";
 import { Book } from "./Book";
+import { Skill } from "./Skill";
 
 @Entity("tests")
 export class Test {
@@ -23,8 +25,8 @@ export class Test {
   @Column({ default: true })
   isPaid?: boolean;
 
-  //   @OneToMany(() => Exam, (exam) => exam.test)
-  //   exams: Exam[];
+  @OneToMany(() => Skill, (skill) => skill.test)
+  skills: Skill[];
 
   @CreateDateColumn()
   createdAt: Date;
