@@ -5,8 +5,10 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from "typeorm";
 import { Test } from "./Test";
+import { Part } from "./Part";
 
 export enum SkillType {
   READING = "READING",
@@ -23,8 +25,8 @@ export class Skill {
   @JoinColumn({ name: "testId" })
   test: Test;
 
-  // @OneToMany(() => Part, (part) => part.skill)
-  // parts: Part[];
+  @OneToMany(() => Part, (part) => part.skill)
+  parts: Part[];
 
   @Column({
     type: "enum",
