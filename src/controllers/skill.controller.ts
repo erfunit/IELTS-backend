@@ -11,6 +11,8 @@ import {
   createNewQuestion,
   updateQuestionById,
   deleteQuestionById,
+  getAllParts,
+  getQuestions,
 } from "../services/skill.service";
 import { controllerWrapper } from "../utils/controllerWrapper";
 
@@ -42,6 +44,11 @@ export const createPartController = async (req: Request, res: Response) => {
   await controllerWrapper(res, createNewPart, skillId, req.body);
 };
 
+export const getAllPartsController = async (req: Request, res: Response) => {
+  const skillId = req.params.skillId;
+  await controllerWrapper(res, getAllParts, skillId);
+};
+
 export const updatePartController = async (req: Request, res: Response) => {
   const partId = req.params.partId;
   await controllerWrapper(res, updatePartById, partId, req.body);
@@ -55,6 +62,11 @@ export const deletePartController = async (req: Request, res: Response) => {
 export const createQuestionController = async (req: Request, res: Response) => {
   const partId = req.params.partId;
   await controllerWrapper(res, createNewQuestion, partId, req.body);
+};
+
+export const getQuestionsController = async (req: Request, res: Response) => {
+  const { skillId, partId } = req.params;
+  await controllerWrapper(res, getQuestions, skillId, partId);
 };
 
 export const updateQuestionController = async (req: Request, res: Response) => {

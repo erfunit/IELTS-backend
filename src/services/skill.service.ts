@@ -51,6 +51,11 @@ export const createNewPart = async (skillId: number, part: Part) => {
   return { message: "New part created successfully", data: newPart };
 };
 
+export const getAllParts = async (skillId: number) => {
+  const partRepository = AppDataSource.getRepository(Part);
+  return await partRepository.find({ where: { skill: { id: skillId } } });
+};
+
 export const updatePartById = async (id: number, part: Part) => {
   const partRepository = AppDataSource.getRepository(Part);
   const existingPart = await partRepository.findOne({ where: { id } });
@@ -72,6 +77,14 @@ export const createNewQuestion = async (partId: number, question: Question) => {
   const newQuestion = questionRepository.create(question);
   await questionRepository.save(newQuestion);
   return { message: "New question created successfully", data: newQuestion };
+};
+
+export const getQuestions = async (skillId: number, partId: number) => {
+  const questionRepository = AppDataSource.getRepository(Question);
+  const result = await questionRepository.find({
+    where: { part: { id: partId, skill: { id: skillId } } },
+  });
+  return result;
 };
 
 export const updateQuestionById = async (id: number, question: Question) => {
