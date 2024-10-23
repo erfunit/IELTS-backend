@@ -2,11 +2,18 @@ import jwt from "jsonwebtoken";
 import { User, UserRole } from "../entities/User";
 import { Otp } from "../entities/Otp";
 import { AppDataSource } from "../app";
+import { isValidPersianPhoneNumber } from "../utils/phoneNumberCheck";
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret";
 
 export const login = async (phoneNumber: string) => {
   const otpRepository = AppDataSource.getRepository(Otp);
+
+  if (!isValidPersianPhoneNumber(phoneNumber)) {
+    throw {
+      message: "phone number must start with 09..., and be valid",
+    };
+  }
 
   // Check if a new OTP can be generated (every 30 seconds)
   const existingOtp = await otpRepository.findOne({

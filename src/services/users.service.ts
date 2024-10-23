@@ -1,14 +1,24 @@
 import { AppDataSource } from "../app";
 import { User, UserRole } from "../entities/User";
 import { Repository } from "typeorm";
+import { isValidPersianPhoneNumber } from "../utils/phoneNumberCheck";
 
 // Create a new user
-const createUser = async (phoneNumber: string, role = UserRole) => {
+const createUser = async (
+  phoneNumber: string,
+  role: UserRole = UserRole.USER
+) => {
   const usersRepository: Repository<User> = AppDataSource.getRepository(User);
+
+  if (!isValidPersianPhoneNumber(phoneNumber)) {
+    throw {
+      message: "Phone number must start with 09..., and be valid",
+    };
+  }
 
   const newUser = usersRepository.create({
     phoneNumber,
-    role: UserRole.USER,
+    role,
   });
 
   return await usersRepository.save(newUser);
@@ -26,6 +36,15 @@ const updateUser = async (id: number, updateData: Partial<User>) => {
   const user = await usersRepository.findOne({ where: { id } });
 
   if (!user) throw new Error(`User with ID ${id} not found`);
+
+  if (
+    updateData.phoneNumber &&
+    !isValidPersianPhoneNumber(updateData.phoneNumber)
+  ) {
+    throw {
+      message: "Phone number must start with 09..., and be valid",
+    };
+  }
 
   // Merge existing user data with new data
   const updatedUser = Object.assign(user, updateData);
