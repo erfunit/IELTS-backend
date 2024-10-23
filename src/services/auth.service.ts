@@ -10,9 +10,7 @@ export const login = async (phoneNumber: string) => {
   const otpRepository = AppDataSource.getRepository(Otp);
 
   if (!isValidPersianPhoneNumber(phoneNumber)) {
-    throw {
-      message: "phone number must start with 09..., and be valid",
-    };
+    throw new Error("phone number must start with 09..., and be valid");
   }
 
   // Check if a new OTP can be generated (every 30 seconds)

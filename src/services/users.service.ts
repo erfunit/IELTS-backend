@@ -11,9 +11,7 @@ const createUser = async (
   const usersRepository: Repository<User> = AppDataSource.getRepository(User);
 
   if (!isValidPersianPhoneNumber(phoneNumber)) {
-    throw {
-      message: "Phone number must start with 09..., and be valid",
-    };
+    throw new Error("Phone number must start with 09..., and be valid");
   }
 
   const newUser = usersRepository.create({
@@ -41,9 +39,7 @@ const updateUser = async (id: number, updateData: Partial<User>) => {
     updateData.phoneNumber &&
     !isValidPersianPhoneNumber(updateData.phoneNumber)
   ) {
-    throw {
-      message: "Phone number must start with 09..., and be valid",
-    };
+    throw new Error("Phone number must start with 09..., and be valid");
   }
 
   // Merge existing user data with new data
