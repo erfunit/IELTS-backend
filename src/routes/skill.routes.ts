@@ -22,11 +22,6 @@ import { partSchema } from "../schemas/part.schema";
 
 const skillRouter = Router();
 
-/*
-Missing endpoints:
-2. get full list of QUESTIONS in a part
-*/
-
 // create new skill
 skillRouter.post(
   "/",

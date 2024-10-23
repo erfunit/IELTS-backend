@@ -1,21 +1,39 @@
 import { AppDataSource } from "../app";
+import { Part } from "../entities/Part";
+import { Skill } from "../entities/Skill";
 import { Test } from "../entities/Test";
 
 export const getAllTests = () => {
   const testRepository = AppDataSource.getRepository(Test);
-  return testRepository.find();
+  return testRepository.find({ relations: ["skills"] });
+};
+
+export const getTestsByBookId = async (bookId: string) => {
+  const testRepository = AppDataSource.getRepository(Test);
+  const result = await testRepository.find({
+    where: {
+      book: {
+        id: +bookId,
+      },
+    },
+    relations: ["book", "skills"], // To load the associated book entity if needed
+  });
+  return result;
 };
 
 export const getOneTestById = (id: number) => {
   const testRepository = AppDataSource.getRepository(Test);
-  return testRepository.findOne({ where: { id } });
+  return testRepository.findOne({ where: { id }, loadRelationIds: true });
 };
 
-export const createNewTest = async (test: Test) => {
+export const createNewTest = async (test: Test & { bookId: number }) => {
   const testRepository = AppDataSource.getRepository(Test);
 
   try {
-    const newTest = testRepository.create(test);
+    const newTest = testRepository.create({
+      ...test,
+      book: { id: test.bookId }, // Ensure this is correctly set
+    });
     await testRepository.save(newTest);
     return {
       message: "New test were added successfully",
@@ -26,7 +44,10 @@ export const createNewTest = async (test: Test) => {
   }
 };
 
-export const updateTestById = async (id: number, test: Test) => {
+export const updateTestById = async (
+  id: number,
+  test: Test & { bookId: number }
+) => {
   const testsRepositiry = AppDataSource.getRepository(Test);
   const existingTest = await testsRepositiry.findOne({ where: { id } });
 
@@ -34,6 +55,7 @@ export const updateTestById = async (id: number, test: Test) => {
     const updatedTest = await testsRepositiry.save({
       ...existingTest,
       ...test,
+      book: { id: test.bookId },
     });
     return {
       message: "Test updated successfully",
@@ -46,17 +68,41 @@ export const updateTestById = async (id: number, test: Test) => {
 
 export const deleteTestById = async (id: number) => {
   const testRepository = AppDataSource.getRepository(Test);
+  const skillRepository = AppDataSource.getRepository(Skill);
+  const partRepository = AppDataSource.getRepository(Part);
+
+  // Fetch the test by ID
   const test = await testRepository.findOne({ where: { id } });
+
   if (!test) {
-    throw Error("Test not found");
+    console.error(`Test not found for ID: ${id}`);
+    throw new Error("Test not found");
   }
+
   try {
-    await testRepository.delete(test.id);
+    // Fetch all skills related to the test
+    const skills = await skillRepository.find({ where: { test: { id } } });
+
+    // Loop through each skill and delete its related parts
+    for (const skill of skills) {
+      await partRepository.delete({ skill: { id: skill.id } });
+    }
+
+    // Delete all skills related to the test
+    await skillRepository.delete({ test: { id } });
+
+    // Finally, delete the test itself
+    await testRepository.delete(id);
+
+    console.log(`Successfully deleted test with ID: ${id}`);
     return {
       message: "Test deleted successfully",
-      data: test,
+      data: test, // Consider returning the deleted test object or just the message.
     };
   } catch (error: any) {
-    return Error(error);
+    console.error(
+      `Error deleting test with ID: ${id}. Error: ${error.message}`
+    );
+    throw new Error("Error deleting test");
   }
 };

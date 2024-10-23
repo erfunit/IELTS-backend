@@ -25,7 +25,7 @@ export class Part {
   @Column({ nullable: true })
   audioUrl?: string;
 
-  @OneToMany(() => Question, (question) => question.part)
+  @OneToMany(() => Question, (question) => question.part, { cascade: true })
   questions: Question[];
 
   @CreateDateColumn()

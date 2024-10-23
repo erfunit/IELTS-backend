@@ -5,12 +5,19 @@ import {
   deleteTestById,
   getAllTests,
   getOneTestById,
+  getTestsByBookId,
   updateTestById,
 } from "../services/test.service";
 import { Test } from "../entities/Test";
 
 export const getAllTestsController = (req: Request, res: Response) => {
   controllerWrapper(res, getAllTests);
+};
+
+export const getBookTestsController = (req: Request, res: Response) => {
+  const { bookId } = req.params; // Use destructuring for clarity
+
+  controllerWrapper(res, getTestsByBookId, bookId);
 };
 
 export const getOneTestController = (req: Request, res: Response) => {
@@ -26,5 +33,5 @@ export const updateTestController = (req: Request, res: Response) => {
 };
 
 export const deleteTestController = (req: Request, res: Response) => {
-  controllerWrapper(res, deleteTestById, req.params.testId);
+  controllerWrapper(res, deleteTestById, parseInt(req.params.testId, 10));
 };

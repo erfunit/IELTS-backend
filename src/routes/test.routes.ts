@@ -4,6 +4,7 @@ import {
   createTestController,
   deleteTestController,
   getAllTestsController,
+  getBookTestsController,
   getOneTestController,
   updateTestController,
 } from "../controllers/test.controller";
@@ -13,6 +14,7 @@ import { testSchema } from "../schemas/test.schema";
 const testRouter = Router();
 
 testRouter.get("/", adminMiddleware, getAllTestsController);
+testRouter.get("/book/:bookId", adminMiddleware, getBookTestsController);
 testRouter.get("/:testId", adminMiddleware, getOneTestController);
 testRouter.post(
   "/",

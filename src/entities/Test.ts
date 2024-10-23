@@ -25,7 +25,7 @@ export class Test {
   @Column({ default: true })
   isPaid?: boolean;
 
-  @OneToMany(() => Skill, (skill) => skill.test)
+  @OneToMany(() => Skill, (skill) => skill.test, { cascade: true })
   skills: Skill[];
 
   @CreateDateColumn()

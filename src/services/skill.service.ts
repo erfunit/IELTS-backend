@@ -3,9 +3,12 @@ import { Skill } from "../entities/Skill";
 import { Part } from "../entities/Part";
 import { Question } from "../entities/Question";
 
-export const createNewSkill = async (skill: Skill) => {
+export const createNewSkill = async (skill: Skill & { testId: number }) => {
   const skillRepository = AppDataSource.getRepository(Skill);
-  const newSkill = skillRepository.create(skill);
+  const newSkill = skillRepository.create({
+    ...skill,
+    test: { id: skill.testId },
+  });
   await skillRepository.save(newSkill);
   return { message: "New skill created successfully", data: newSkill };
 };
@@ -65,8 +68,16 @@ export const updatePartById = async (id: number, part: Part) => {
 
 export const deletePartById = async (id: number) => {
   const partRepository = AppDataSource.getRepository(Part);
+  const questionRepository = AppDataSource.getRepository(Question);
+
+  // Find the part
   const part = await partRepository.findOne({ where: { id } });
   if (!part) throw Error("Part not found");
+
+  // Delete associated questions
+  await questionRepository.delete({ part: { id } });
+
+  // Now delete the part
   await partRepository.delete(part.id);
   return { message: "Part deleted successfully", data: part };
 };

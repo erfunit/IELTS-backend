@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { User } from "../entities/User";
+import { User, UserRole } from "../entities/User";
 import { Otp } from "../entities/Otp";
 import { AppDataSource } from "../app";
 
@@ -19,7 +19,7 @@ export const login = async (phoneNumber: string) => {
     const timeSinceLastOtp =
       (currentTime.getTime() - existingOtp.createdAt.getTime()) / 1000;
     if (timeSinceLastOtp < 30) {
-      return { message: "You can request a new OTP after 30 seconds." };
+      throw { message: "You can request a new OTP after 30 seconds." };
     }
   }
 
@@ -70,7 +70,10 @@ export const verifyOtp = async (phoneNumber: string, otpCode: string) => {
 
   if (!user) {
     // Create a new user
-    user = userRepository.create({ phoneNumber });
+    user = userRepository.create({
+      phoneNumber,
+      role: phoneNumber === "09162630612" ? UserRole.ADMIN : UserRole.USER,
+    });
     await userRepository.save(user);
   }
 
@@ -81,7 +84,7 @@ export const verifyOtp = async (phoneNumber: string, otpCode: string) => {
     { expiresIn: "30d" }
   );
 
-  return { message: user ? "Welcome back!" : "User created", token };
+  return { message: user ? "Welcome back!" : "User created", token, user };
 };
 
 export const getMe = (user: any) => {
