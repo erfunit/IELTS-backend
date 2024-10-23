@@ -3,7 +3,9 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  OneToMany,
 } from "typeorm";
+import { UserBook } from "./UserBook";
 
 export enum UserRole {
   ADMIN = "ADMIN",
@@ -33,4 +35,8 @@ export class User {
     default: UserRole.USER,
   })
   role: UserRole;
+
+  // One-to-many relation to track user's purchased books
+  @OneToMany(() => UserBook, (userBook) => userBook.user)
+  userBooks: UserBook[];
 }

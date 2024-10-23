@@ -6,6 +6,7 @@ import {
   OneToMany,
   AfterLoad,
 } from "typeorm";
+import { UserBook } from "./UserBook";
 import { Test } from "./Test";
 
 @Entity("books")
@@ -33,6 +34,10 @@ export class Book {
 
   @OneToMany(() => Test, (test) => test.book)
   tests: Test[];
+
+  // One-to-many relation to track which users have purchased this book
+  @OneToMany(() => UserBook, (userBook) => userBook.book)
+  userBooks: UserBook[];
 
   @CreateDateColumn()
   createdAt: Date;
