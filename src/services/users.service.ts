@@ -19,7 +19,11 @@ const createUser = async (
     role,
   });
 
-  return await usersRepository.save(newUser);
+  const result = await usersRepository.save(newUser);
+  return {
+    message: "new user added",
+    data: result,
+  };
 };
 
 // Get a user by their ID
@@ -29,11 +33,22 @@ const getUserById = async (id: number) => {
 };
 
 // Update an existing user by ID
-const updateUser = async (id: number, updateData: Partial<User>) => {
+const updateUser = async (
+  id: number,
+  updateData: Partial<User>,
+  fromUser: any
+) => {
   const usersRepository: Repository<User> = AppDataSource.getRepository(User);
   const user = await usersRepository.findOne({ where: { id } });
+  const fromUserData = await usersRepository.findOne({
+    where: { id: fromUser.id },
+  });
 
   if (!user) throw new Error(`User with ID ${id} not found`);
+
+  if (user.id === fromUserData?.id && updateData.role) {
+    throw new Error("You cannot edit your own info");
+  }
 
   if (
     updateData.phoneNumber &&
@@ -52,13 +67,23 @@ const updateUser = async (id: number, updateData: Partial<User>) => {
 };
 
 // Delete a user by ID
-const deleteUser = async (id: number) => {
+const deleteUser = async (id: number, fromUser: any) => {
   const usersRepository: Repository<User> = AppDataSource.getRepository(User);
   const user = await usersRepository.findOne({ where: { id } });
+  const fromUserData = await usersRepository.findOne({
+    where: { id: fromUser.id },
+  });
 
   if (!user) throw new Error(`User with ID ${id} not found`);
 
-  return await usersRepository.remove(user);
+  if (user.id === fromUserData?.id)
+    throw new Error("You cannot remove your own account");
+
+  const result = await usersRepository.remove(user);
+  return {
+    message: `user -${user.phoneNumber}- deleted`,
+    data: result,
+  };
 };
 
 // Get all users (already provided)

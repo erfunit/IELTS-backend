@@ -33,5 +33,5 @@ export const updateTestController = (req: Request, res: Response) => {
 };
 
 export const deleteTestController = (req: Request, res: Response) => {
-  controllerWrapper(res, deleteTestById, parseInt(req.params.testId, 10));
+  controllerWrapper(res, deleteTestById, parseInt(req.params.testId!, 10));
 };

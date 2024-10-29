@@ -9,6 +9,7 @@ import {
 import { adminMiddleware } from "../middlewares/admin.middleware";
 import { validateSchema } from "../middlewares/schema.middleware";
 import { userSchema } from "../schemas/user.schema";
+import { authMiddleware } from "../middlewares/auth.middleware";
 
 const userRouter = Router();
 
