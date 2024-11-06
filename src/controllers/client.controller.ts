@@ -1,5 +1,9 @@
 import { Response } from "express";
-import { getClientBooks, purchaseBook } from "../services/client.service";
+import {
+  getClientBooks,
+  getClientSkills,
+  purchaseBook,
+} from "../services/client.service";
 import { AuthenticatedRequest } from "../types";
 import { controllerWrapper } from "../utils/controllerWrapper";
 
@@ -18,4 +22,13 @@ export const getClientBooksControler = async (
 ) => {
   const user = req?.user;
   await controllerWrapper(res, getClientBooks, user);
+};
+
+export const getClientSkillsController = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  const user = req?.user;
+  const testId = parseInt(req.query.testId as string, 10);
+  await controllerWrapper(res, getClientSkills, testId, user);
 };

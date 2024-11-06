@@ -4,6 +4,8 @@ import { Repository } from "typeorm";
 import { isValidPersianPhoneNumber } from "../utils/phoneNumberCheck";
 import { Book } from "../entities/Book";
 import { UserBook } from "../entities/UserBook";
+import { Test } from "../entities/Test";
+import { Skill } from "../entities/Skill";
 
 const purchaseBook = async (userdata: any, bookId: number) => {
   const userRepository = AppDataSource.getRepository(User);
@@ -67,4 +69,42 @@ const getClientBooks = async (user: any) => {
   }));
 };
 
-export { purchaseBook, getClientBooks };
+const getClientSkills = async (testId: number, user: any) => {
+  if (!user) {
+    throw new Error("Unauthorized access. User must be logged in.");
+  }
+
+  const userBookRepository = AppDataSource.getRepository(UserBook);
+  const testRepository = AppDataSource.getRepository(Test);
+  const skillRepository = AppDataSource.getRepository(Skill);
+
+  // Step 1: Retrieve the test by ID to get the associated book ID
+  const test = await testRepository.findOne({
+    where: { id: testId },
+    relations: ["book"],
+  });
+
+  if (!test || !test.book) {
+    throw new Error("Test or associated book not found.");
+  }
+
+  const bookId = test.book.id;
+
+  // Step 2: Check if the user has purchased the book
+  const userBook = await userBookRepository.findOne({
+    where: { user: { id: user.id }, book: { id: bookId } },
+  });
+
+  if (!userBook) {
+    throw new Error("Access denied: User has not purchased the required book.");
+  }
+
+  // Step 3: Fetch and return the skills associated with the test
+  const skills = await skillRepository.find({
+    where: { test: { id: testId } },
+  });
+
+  return skills;
+};
+
+export { purchaseBook, getClientBooks, getClientSkills };

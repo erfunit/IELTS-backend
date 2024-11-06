@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authMiddleware, optionalAuth } from "../middlewares/auth.middleware";
 import {
   getClientBooksControler,
+  getClientSkillsController,
   purchaseBookController,
 } from "../controllers/client.controller";
 
@@ -14,5 +15,7 @@ clientRouter.post(
 );
 
 clientRouter.get("/books", optionalAuth, getClientBooksControler);
+
+clientRouter.get("/skills", authMiddleware, getClientSkillsController);
 
 export default clientRouter;
