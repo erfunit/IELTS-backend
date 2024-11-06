@@ -1,11 +1,10 @@
 import { AppDataSource } from "../app";
-import { User, UserRole } from "../entities/User";
-import { Repository } from "typeorm";
-import { isValidPersianPhoneNumber } from "../utils/phoneNumberCheck";
+import { User } from "../entities/User";
 import { Book } from "../entities/Book";
 import { UserBook } from "../entities/UserBook";
 import { Test } from "../entities/Test";
 import { Skill } from "../entities/Skill";
+import { Part } from "../entities/Part";
 
 const purchaseBook = async (userdata: any, bookId: number) => {
   const userRepository = AppDataSource.getRepository(User);
@@ -107,4 +106,49 @@ const getClientSkills = async (testId: number, user: any) => {
   return skills;
 };
 
-export { purchaseBook, getClientBooks, getClientSkills };
+const getClientParts = async (skillId: number, user: any) => {
+  if (!user) {
+    throw new Error("Unauthorized access. User must be logged in.");
+  }
+
+  const userBookRepository = AppDataSource.getRepository(UserBook);
+  const skillRepository = AppDataSource.getRepository(Skill);
+  const partRepository = AppDataSource.getRepository(Part);
+
+  // Retrieve the skill to access the related test and book
+  const skill = await skillRepository.findOne({
+    where: { id: skillId },
+    relations: ["test", "test.book"],
+  });
+
+  if (!skill || !skill.test || !skill.test.book) {
+    throw new Error("Skill, associated test, or book not found.");
+  }
+
+  const bookId = skill.test.book.id;
+
+  // Check if the user has purchased the book associated with this skill
+  const userBook = await userBookRepository.findOne({
+    where: { user: { id: user.id }, book: { id: bookId } },
+  });
+
+  if (!userBook) {
+    throw new Error("Access denied: User has not purchased the required book.");
+  }
+
+  // Fetch parts and exclude `correctAnswers` from each question
+  const parts = await partRepository.find({
+    where: { skill: { id: skillId } },
+    relations: ["questions"],
+  });
+
+  // Remove `correctAnswers` from each question in each part
+  return parts.map((part) => ({
+    ...part,
+    questions: part.questions.map(
+      ({ correctAnswers, ...question }) => question
+    ),
+  }));
+};
+
+export { purchaseBook, getClientBooks, getClientSkills, getClientParts };
