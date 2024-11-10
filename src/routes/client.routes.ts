@@ -5,6 +5,7 @@ import {
   getClientPartsController,
   getClientSkillsController,
   purchaseBookController,
+  submitQuestionsController,
 } from "../controllers/client.controller";
 
 const clientRouter = Router();
@@ -19,5 +20,10 @@ clientRouter.get("/books", optionalAuth, getClientBooksControler);
 
 clientRouter.get("/skills", authMiddleware, getClientSkillsController);
 clientRouter.get("/parts", authMiddleware, getClientPartsController);
+clientRouter.post(
+  "/submit-questions",
+  authMiddleware,
+  submitQuestionsController
+);
 
 export default clientRouter;

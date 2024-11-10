@@ -4,6 +4,7 @@ import {
   getClientParts,
   getClientSkills,
   purchaseBook,
+  submitClientQuestions,
 } from "../services/client.service";
 import { AuthenticatedRequest } from "../types";
 import { controllerWrapper } from "../utils/controllerWrapper";
@@ -41,4 +42,13 @@ export const getClientPartsController = async (
   const user = req?.user;
   const skillId = parseInt(req.query.skillId as string, 10);
   await controllerWrapper(res, getClientParts, skillId, user);
+};
+
+export const submitQuestionsController = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  const user: any = req?.user;
+  const { testId, answers } = req.body;
+  await controllerWrapper(res, submitClientQuestions, user.id, testId, answers);
 };

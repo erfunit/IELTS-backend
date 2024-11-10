@@ -23,11 +23,8 @@ export class User {
   @CreateDateColumn()
   createdAt: Date;
 
-  @Column({ type: "simple-json", nullable: true })
-  lastTest: {
-    testId: number;
-    date: Date;
-  };
+  @Column({ nullable: true })
+  lastTestResultId: number; // Store the ID of the last test result
 
   @Column({
     type: "enum",

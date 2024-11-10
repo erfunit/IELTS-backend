@@ -5,6 +5,10 @@ import { UserBook } from "../entities/UserBook";
 import { Test } from "../entities/Test";
 import { Skill } from "../entities/Skill";
 import { Part } from "../entities/Part";
+import { Question } from "../entities/Question";
+import { getIeltsBand } from "../utils/calculateBand";
+import { UserTestResult } from "../entities/UserTestResults";
+import { DeepPartial } from "typeorm";
 
 const purchaseBook = async (userdata: any, bookId: number) => {
   const userRepository = AppDataSource.getRepository(User);
@@ -151,4 +155,79 @@ const getClientParts = async (skillId: number, user: any) => {
   }));
 };
 
-export { purchaseBook, getClientBooks, getClientSkills, getClientParts };
+const submitClientQuestions = async (
+  userId: number,
+  testId: number,
+  answers: any
+) => {
+  const userRespository = AppDataSource.getRepository(User);
+  const testRespository = AppDataSource.getRepository(Test);
+  const questionRespository = AppDataSource.getRepository(Question);
+  const userTestResultRepository = AppDataSource.getRepository(UserTestResult);
+
+  const resultAnswers: {
+    questionId: number;
+    isCorrect: boolean;
+    correctAnswer: string | string[];
+    userAnswer: string | string[];
+  }[] = [];
+
+  const test = await testRespository.findOne({ where: { id: testId } });
+  if (!test) {
+    throw Error("Test not found");
+  }
+
+  let readingCorrectCounts = 0;
+  let listeningCorrectCounts = 0;
+
+  const questions = await questionRespository.find({
+    where: { part: { skill: { test: { id: testId } } } },
+  });
+
+  answers.forEach((answer: any) => {
+    const question = questions.find((item) => item.id === answer.questionId);
+    if (!question)
+      throw Error(`Question with id ${answer.questionId} not found.`);
+    let isCorrect = false;
+    if (question?.correctAnswers === answer.answer) {
+      if (answer.skillType === "READING") readingCorrectCounts += 1;
+      if (answer.skillType === "LISTENING") listeningCorrectCounts += 1;
+      isCorrect = true;
+    }
+    resultAnswers.push({
+      questionId: question.id,
+      isCorrect: isCorrect,
+      correctAnswer: question?.correctAnswers!,
+      userAnswer: answer.answer,
+    });
+  });
+
+  const readingBand = getIeltsBand(readingCorrectCounts, "READING");
+  const listeningBand = getIeltsBand(listeningCorrectCounts, "LISTENING");
+
+  const result = userTestResultRepository.create({
+    answers: resultAnswers,
+    userId,
+    testId,
+    listeningBand,
+    readingBand,
+  } as DeepPartial<UserTestResult>);
+
+  const user = await userRespository.findOne({ where: { id: userId } });
+
+  if (user) user.lastTestResultId = result.id;
+  else throw Error("user not found");
+
+  // Save the created result to the database
+  await userTestResultRepository.save(result);
+
+  return result;
+};
+
+export {
+  purchaseBook,
+  getClientBooks,
+  getClientSkills,
+  getClientParts,
+  submitClientQuestions,
+};

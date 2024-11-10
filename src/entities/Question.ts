@@ -50,10 +50,6 @@ export class Question {
   @Column({ type: "json", nullable: true })
   matchingPairs?: Array<{ key: string; value: string }>;
 
-  // For user-input answers (e.g., Fill-in-the-Blanks, True/False/Not Given)
-  @Column({ type: "json", nullable: true })
-  userAnswer?: string[] | string;
-
   @CreateDateColumn()
   createdAt: Date;
 }
