@@ -9,6 +9,7 @@ export const controllerWrapper = async (
     const result = await cb(...args);
     res.json(result);
   } catch (error) {
+    console.log(error);
     if (error instanceof Error)
       res.status(400).json({ message: error.message });
     else res.status(500).json({ message: "Internal Server Error" });

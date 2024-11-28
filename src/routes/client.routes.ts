@@ -18,7 +18,7 @@ clientRouter.post(
 
 clientRouter.get("/books", optionalAuth, getClientBooksControler);
 
-clientRouter.get("/skills", authMiddleware, getClientSkillsController);
+clientRouter.get("/skills", optionalAuth, getClientSkillsController);
 clientRouter.get("/parts", authMiddleware, getClientPartsController);
 clientRouter.post(
   "/submit-questions",

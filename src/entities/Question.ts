@@ -44,11 +44,7 @@ export class Question {
 
   // Correct answer(s), different types will use this differently (multi-select can be an array, fill-in-the-blank single string, etc.)
   @Column({ type: "json", nullable: true })
-  correctAnswers?: string[] | string;
-
-  // For matching pairs (Match Heading, Matching Items, etc.)
-  @Column({ type: "json", nullable: true })
-  matchingPairs?: Array<{ key: string; value: string }>;
+  correctAnswers?: string;
 
   @CreateDateColumn()
   createdAt: Date;

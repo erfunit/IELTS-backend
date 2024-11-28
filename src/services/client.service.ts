@@ -10,6 +10,29 @@ import { getIeltsBand } from "../utils/calculateBand";
 import { UserTestResult } from "../entities/UserTestResults";
 import { DeepPartial } from "typeorm";
 
+import crypto from "crypto";
+
+export function encrypt(text: string): string {
+  if (!text) throw new Error("Text to encrypt is undefined.");
+  const SECRET_KEY = process.env.SECRET_KEY!;
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv(
+    "aes-256-cbc",
+    Buffer.from(SECRET_KEY, "hex"),
+    iv
+  );
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  return `${iv.toString("hex")}:${encrypted}`;
+}
+const encryptQuestions = (questions: Question[]) => {
+  return questions.map((q) => ({
+    ...q,
+    questionText: q.questionText ? encrypt(q.questionText) : null,
+    options: q.options?.map((option) => (option ? encrypt(option) : null)),
+  }));
+};
+
 const purchaseBook = async (userdata: any, bookId: number) => {
   const userRepository = AppDataSource.getRepository(User);
   const bookRepository = AppDataSource.getRepository(Book);
@@ -98,7 +121,7 @@ const getClientSkills = async (testId: number, user: any) => {
     where: { user: { id: user.id }, book: { id: bookId } },
   });
 
-  if (!userBook) {
+  if (test.isPaid && !userBook) {
     throw new Error("Access denied: User has not purchased the required book.");
   }
 
@@ -107,7 +130,17 @@ const getClientSkills = async (testId: number, user: any) => {
     where: { test: { id: testId } },
   });
 
-  return skills;
+  const sortOrder = ["READING", "LISTENING", "WRITING"];
+
+  // Sort the array based on the skill type
+  skills.sort(
+    (a, b) => sortOrder.indexOf(a.skillType) - sortOrder.indexOf(b.skillType)
+  );
+
+  return {
+    title: test.name,
+    skills: skills,
+  };
 };
 
 const getClientParts = async (skillId: number, user: any) => {
@@ -136,7 +169,7 @@ const getClientParts = async (skillId: number, user: any) => {
     where: { user: { id: user.id }, book: { id: bookId } },
   });
 
-  if (!userBook) {
+  if (skill.test.isPaid && !userBook) {
     throw new Error("Access denied: User has not purchased the required book.");
   }
 
@@ -149,8 +182,8 @@ const getClientParts = async (skillId: number, user: any) => {
   // Remove `correctAnswers` from each question in each part
   return parts.map((part) => ({
     ...part,
-    questions: part.questions.map(
-      ({ correctAnswers, ...question }) => question
+    questions: encryptQuestions(
+      part.questions.map(({ correctAnswers, ...question }) => question)
     ),
   }));
 };
@@ -168,8 +201,8 @@ const submitClientQuestions = async (
   const resultAnswers: {
     questionId: number;
     isCorrect: boolean;
-    correctAnswer: string | string[];
-    userAnswer: string | string[];
+    correctAnswer: string;
+    userAnswer: string;
   }[] = [];
 
   const test = await testRespository.findOne({ where: { id: testId } });
@@ -188,16 +221,37 @@ const submitClientQuestions = async (
     const question = questions.find((item) => item.id === answer.questionId);
     if (!question)
       throw Error(`Question with id ${answer.questionId} not found.`);
+
     let isCorrect = false;
-    if (question?.correctAnswers === answer.answer) {
+
+    // Normalize the correctAnswers and userAnswer
+    const correctAnswersArray = question.correctAnswers?.includes(",")
+      ? question.correctAnswers
+          .split(",")
+          .map((item) => item.trim())
+          .sort()
+      : [question.correctAnswers?.trim()];
+
+    const userAnswersArray = answer.answer.includes(",")
+      ? answer.answer
+          .split(",")
+          .map((item: any) => item.trim())
+          .sort()
+      : [answer.answer.trim()];
+
+    // Compare the normalized arrays as strings
+    if (
+      JSON.stringify(correctAnswersArray) === JSON.stringify(userAnswersArray)
+    ) {
       if (answer.skillType === "READING") readingCorrectCounts += 1;
       if (answer.skillType === "LISTENING") listeningCorrectCounts += 1;
       isCorrect = true;
     }
+
     resultAnswers.push({
       questionId: question.id,
       isCorrect: isCorrect,
-      correctAnswer: question?.correctAnswers!,
+      correctAnswer: question.correctAnswers!,
       userAnswer: answer.answer,
     });
   });
@@ -216,7 +270,7 @@ const submitClientQuestions = async (
   const user = await userRespository.findOne({ where: { id: userId } });
 
   if (user) user.lastTestResultId = result.id;
-  else throw Error("user not found");
+  else throw Error("User not found");
 
   // Save the created result to the database
   await userTestResultRepository.save(result);
