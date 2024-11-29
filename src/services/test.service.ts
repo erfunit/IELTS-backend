@@ -72,7 +72,10 @@ export const deleteTestById = async (id: number) => {
   const partRepository = AppDataSource.getRepository(Part);
 
   // Fetch the test by ID
-  const test = await testRepository.findOne({ where: { id } });
+  const test = await testRepository.findOne({
+    where: { id },
+    relations: ["skills", "skills.parts", "skills.parts.questions"],
+  });
 
   if (!test) {
     console.error(`Test not found for ID: ${id}`);
@@ -80,19 +83,19 @@ export const deleteTestById = async (id: number) => {
   }
 
   try {
-    // Fetch all skills related to the test
-    const skills = await skillRepository.find({ where: { test: { id } } });
+    // // Fetch all skills related to the test
+    // const skills = await skillRepository.find({ where: { test: { id } } });
 
-    // Loop through each skill and delete its related parts
-    for (const skill of skills) {
-      await partRepository.delete({ skill: { id: skill.id } });
-    }
+    // // Loop through each skill and delete its related parts
+    // for (const skill of skills) {
+    //   await partRepository.delete({ skill: { id: skill.id } });
+    // }
 
     // Delete all skills related to the test
     await skillRepository.delete({ test: { id } });
 
     // Finally, delete the test itself
-    await testRepository.delete(id);
+    await testRepository.remove(test);
 
     console.log(`Successfully deleted test with ID: ${id}`);
     return {

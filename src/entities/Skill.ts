@@ -25,7 +25,10 @@ export class Skill {
   @JoinColumn({ name: "testId" })
   test: Test;
 
-  @OneToMany(() => Part, (part) => part.skill, { cascade: true })
+  @OneToMany(() => Part, (part) => part.skill, {
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   parts: Part[];
 
   @Column({

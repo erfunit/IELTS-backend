@@ -13,10 +13,10 @@ export class UserBook {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.userBooks)
+  @ManyToOne(() => User, (user) => user.userBooks, { onDelete: "CASCADE" })
   user: User;
 
-  @ManyToOne(() => Book, (book) => book.userBooks)
+  @ManyToOne(() => Book, (book) => book.userBooks, { onDelete: "CASCADE" })
   book: Book;
 
   @CreateDateColumn()

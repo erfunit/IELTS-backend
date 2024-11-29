@@ -18,14 +18,18 @@ export class Test {
   @Column()
   name: string;
 
-  @ManyToOne(() => Book, (book) => book.tests)
+  // Add onDelete: "CASCADE" to automatically delete tests when a book is deleted
+  @ManyToOne(() => Book, (book) => book.tests, { onDelete: "CASCADE" })
   @JoinColumn({ name: "bookId" })
   book: Book;
 
   @Column({ default: true })
   isPaid?: boolean;
 
-  @OneToMany(() => Skill, (skill) => skill.test, { cascade: true })
+  @OneToMany(() => Skill, (skill) => skill.test, {
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   skills: Skill[];
 
   @CreateDateColumn()

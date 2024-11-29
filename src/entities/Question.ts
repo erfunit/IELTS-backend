@@ -25,7 +25,7 @@ export class Question {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Part, (part) => part.questions)
+  @ManyToOne(() => Part, (part) => part.questions, { onDelete: "CASCADE" })
   @JoinColumn({ name: "partId" })
   part: Part;
 

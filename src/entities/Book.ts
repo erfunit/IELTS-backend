@@ -32,10 +32,12 @@ export class Book {
   @Column()
   publisher: string;
 
-  @OneToMany(() => Test, (test) => test.book)
+  @OneToMany(() => Test, (test) => test.book, {
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   tests: Test[];
 
-  // One-to-many relation to track which users have purchased this book
   @OneToMany(() => UserBook, (userBook) => userBook.book)
   userBooks: UserBook[];
 

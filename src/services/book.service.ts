@@ -62,17 +62,28 @@ export const updateBookById = async (id: number, book: Book) => {
 
 export const deleteBookById = async (id: number) => {
   const booksRepositiry = AppDataSource.getRepository(Book);
-  const book = await booksRepositiry.findOne({ where: { id } });
+  const book = await booksRepositiry.findOne({
+    where: { id },
+    relations: [
+      "tests",
+      "tests.skills",
+      "tests.skills.parts",
+      "tests.skills.parts.questions",
+    ],
+  });
+
   if (!book) {
     throw Error("Book not found");
   }
+
   try {
-    await booksRepositiry.delete(book.id);
+    await booksRepositiry.remove(book); // Cascade delete should now work
     return {
-      message: "Book deleted successfully",
+      message: "Book and its related data deleted successfully",
       data: book,
     };
   } catch (error: any) {
+    console.log(error);
     return Error(error);
   }
 };

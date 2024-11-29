@@ -40,9 +40,20 @@ export const updateSkillById = async (id: number, skill: Skill) => {
 
 export const deleteSkillById = async (id: number) => {
   const skillRepository = AppDataSource.getRepository(Skill);
-  const skill = await skillRepository.findOne({ where: { id } });
+  const partRepository = AppDataSource.getRepository(Part);
+
+  const skill = await skillRepository.findOne({
+    where: { id },
+    relations: ["parts"],
+  });
   if (!skill) throw Error("Skill not found");
-  await skillRepository.delete(skill.id);
+
+  // Delete parts explicitly
+  await partRepository.delete({ skill: { id } });
+
+  // Now delete the skill
+  await skillRepository.delete(id);
+
   return { message: "Skill deleted successfully", data: skill };
 };
 

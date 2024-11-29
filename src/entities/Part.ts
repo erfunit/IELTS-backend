@@ -15,7 +15,7 @@ export class Part {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Skill, (skill) => skill.parts)
+  @ManyToOne(() => Skill, (skill) => skill.parts, { onDelete: "CASCADE" })
   @JoinColumn({ name: "skillId" })
   skill: Skill;
 
@@ -25,7 +25,10 @@ export class Part {
   @Column({ nullable: true })
   audioUrl?: string;
 
-  @OneToMany(() => Question, (question) => question.part, { cascade: true })
+  @OneToMany(() => Question, (question) => question.part, {
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   questions: Question[];
 
   @CreateDateColumn()
