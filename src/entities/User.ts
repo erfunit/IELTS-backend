@@ -24,7 +24,7 @@ export class User {
   createdAt: Date;
 
   @Column({ nullable: true })
-  lastTestResultId: number; // Store the ID of the last test result
+  lastTest: number; // Store the ID of the last test result
 
   @Column({
     type: "enum",

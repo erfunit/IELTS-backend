@@ -9,13 +9,15 @@ import {
   getOneBookController,
   updateBookController,
 } from "../controllers/book.controller";
+import { uploadMiddleware } from "../services/book.service";
 
 const bookRouter = Router();
 
 bookRouter.post(
   "/",
   adminMiddleware,
-  validateSchema(bookSchema),
+  uploadMiddleware,
+  // validateSchema(bookSchema),
   createBookController
 );
 bookRouter.get("/", adminMiddleware, getAllBooksController);
@@ -23,7 +25,8 @@ bookRouter.get("/:bookId", adminMiddleware, getOneBookController);
 bookRouter.put(
   "/:bookId",
   adminMiddleware,
-  validateSchema(bookSchema, true),
+  uploadMiddleware,
+  // validateSchema(bookSchema, true),
   updateBookController
 );
 bookRouter.delete("/:bookId", adminMiddleware, deleteBookController);

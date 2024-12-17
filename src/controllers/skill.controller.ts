@@ -41,7 +41,7 @@ export const deleteSkillController = async (req: Request, res: Response) => {
 
 export const createPartController = async (req: Request, res: Response) => {
   const skillId = req.params.skillId;
-  await controllerWrapper(res, createNewPart, skillId, req.body);
+  await controllerWrapper(res, createNewPart, skillId, req);
 };
 
 export const getAllPartsController = async (req: Request, res: Response) => {
@@ -51,7 +51,7 @@ export const getAllPartsController = async (req: Request, res: Response) => {
 
 export const updatePartController = async (req: Request, res: Response) => {
   const partId = req.params.partId;
-  await controllerWrapper(res, updatePartById, partId, req.body);
+  await controllerWrapper(res, updatePartById, partId, req);
 };
 
 export const deletePartController = async (req: Request, res: Response) => {

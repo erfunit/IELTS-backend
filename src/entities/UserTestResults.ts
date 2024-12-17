@@ -20,10 +20,10 @@ export class UserTestResult {
   @Column()
   testId: number;
 
-  @Column({ nullable: true })
+  @Column({ type: "decimal", precision: 4, scale: 1, nullable: true })
   readingBand: number;
 
-  @Column({ nullable: true })
+  @Column({ type: "decimal", precision: 4, scale: 1, nullable: true })
   listeningBand: number;
 
   @Column({ type: "simple-json" })

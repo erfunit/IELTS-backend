@@ -3,6 +3,85 @@ import { Skill } from "../entities/Skill";
 import { Part } from "../entities/Part";
 import { Question } from "../entities/Question";
 
+// file related imports:
+import { uploadFile } from "../utils/uploadFile";
+import multer from "multer";
+
+import dotenv from "dotenv";
+import { Request } from "express";
+dotenv.config();
+
+const storage = multer.memoryStorage();
+export const uploadMiddlewareAudio = multer({ storage }).single("audio");
+
+export const createNewPart = async (skillId: number, req: Request) => {
+  const partRepository = AppDataSource.getRepository(Part);
+
+  const { passageOrPrompt } = req.body;
+  const file = req.file;
+
+  if (!passageOrPrompt && !file) {
+    throw new Error("Missing required fields or file");
+  }
+
+  const skill = { skillId } as any;
+
+  try {
+    const audioUrl = (await uploadFile(file)) || undefined;
+    const newPart = partRepository.create({
+      passageOrPrompt,
+      audioUrl,
+      skill: skill.skillId,
+      // skill,
+    });
+    await partRepository.save(newPart);
+    return { message: "New part created successfully", data: newPart };
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+
+  // const newPart = partRepository.create(part);
+  // await partRepository.save(newPart);
+  // return { message: "New part created successfully", data: newPart };
+};
+
+export const updatePartById = async (id: number, req: Request) => {
+  const partRepository = AppDataSource.getRepository(Part);
+
+  // Extract body data and file
+  const { passageOrPrompt } = req.body;
+  const file = req.file;
+
+  try {
+    // Find the existing part
+    const existingPart = await partRepository.findOne({ where: { id } });
+    if (!existingPart) {
+      throw new Error("Part not found");
+    }
+
+    // Check if there are updates to apply
+    if (!passageOrPrompt && !file) {
+      throw new Error("No updates provided");
+    }
+
+    // Upload file if provided and get the URL
+    const audioUrl = file ? await uploadFile(file) : undefined;
+
+    // Merge the updated fields with the existing part
+    const updatedPart = partRepository.merge(existingPart, {
+      passageOrPrompt: passageOrPrompt || existingPart.passageOrPrompt,
+      audioUrl: audioUrl || existingPart.audioUrl,
+    });
+
+    // Save the updated part
+    await partRepository.save(updatedPart);
+
+    return { message: "Part updated successfully", data: updatedPart };
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+};
+
 export const createNewSkill = async (skill: Skill & { testId: number }) => {
   const skillRepository = AppDataSource.getRepository(Skill);
   const newSkill = skillRepository.create({
@@ -57,24 +136,9 @@ export const deleteSkillById = async (id: number) => {
   return { message: "Skill deleted successfully", data: skill };
 };
 
-export const createNewPart = async (skillId: number, part: Part) => {
-  const partRepository = AppDataSource.getRepository(Part);
-  part.skill = { id: skillId } as any;
-  const newPart = partRepository.create(part);
-  await partRepository.save(newPart);
-  return { message: "New part created successfully", data: newPart };
-};
-
 export const getAllParts = async (skillId: number) => {
   const partRepository = AppDataSource.getRepository(Part);
   return await partRepository.find({ where: { skill: { id: skillId } } });
-};
-
-export const updatePartById = async (id: number, part: Part) => {
-  const partRepository = AppDataSource.getRepository(Part);
-  const existingPart = await partRepository.findOne({ where: { id } });
-  const updatedPart = await partRepository.save({ ...existingPart, ...part });
-  return { message: "Part updated successfully", data: updatedPart };
 };
 
 export const deletePartById = async (id: number) => {

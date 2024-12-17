@@ -50,5 +50,11 @@ export const submitQuestionsController = async (
 ) => {
   const user: any = req?.user;
   const { testId, answers } = req.body;
-  await controllerWrapper(res, submitClientQuestions, user.id, testId, answers);
+  await controllerWrapper(
+  res,
+    submitClientQuestions,
+    user.id,
+    +testId,
+    answers
+  );
 };

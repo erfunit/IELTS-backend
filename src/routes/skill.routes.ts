@@ -19,6 +19,8 @@ import {
 import { skillSchema } from "../schemas/skill.schema";
 import { questionSchema } from "../schemas/question.schema";
 import { partSchema } from "../schemas/part.schema";
+import { uploadMiddleware } from "../services/book.service";
+import { uploadMiddlewareAudio } from "../services/skill.service";
 
 const skillRouter = Router();
 
@@ -51,7 +53,8 @@ skillRouter.delete("/:skillId", adminMiddleware, deleteSkillController);
 skillRouter.post(
   "/:skillId/parts",
   adminMiddleware,
-  validateSchema(partSchema),
+  uploadMiddlewareAudio,
+  // validateSchema(partSchema),
   createPartController
 );
 
@@ -61,7 +64,8 @@ skillRouter.get("/:skillId/parts", adminMiddleware, getAllPartsController);
 skillRouter.put(
   "/:skillId/parts/:partId",
   adminMiddleware,
-  validateSchema(partSchema, true),
+  uploadMiddlewareAudio,
+  // validateSchema(partSchema, true),
   updatePartController
 );
 

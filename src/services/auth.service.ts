@@ -3,6 +3,7 @@ import { User, UserRole } from "../entities/User";
 import { Otp } from "../entities/Otp";
 import { AppDataSource } from "../app";
 import { isValidPersianPhoneNumber } from "../utils/phoneNumberCheck";
+import { UserTestResult } from "../entities/UserTestResults";
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret";
 
@@ -35,6 +36,32 @@ export const login = async (phoneNumber: string) => {
   const otp = otpRepository.create({ otpCode, phoneNumber, maxAge: 300 });
   await otpRepository.save(otp);
 
+  var myHeaders = new Headers();
+  myHeaders.append("Content-Type", "application/json");
+  myHeaders.append("Accept", "text/plain");
+  myHeaders.append("x-api-key", process.env.SMS_API_KEY!);
+
+  var raw = JSON.stringify({
+    mobile: phoneNumber,
+    templateId: 541466,
+    parameters: [
+      { name: "code", value: otp.otpCode },
+      // { name: "PARAMETER2", value: "000000" },
+    ],
+  });
+
+  const requestOptions: RequestInit = {
+    method: "POST",
+    headers: myHeaders,
+    body: raw,
+    redirect: "follow",
+  };
+
+  fetch("https://api.sms.ir/v1/send/verify", requestOptions)
+    .then((response) => response.text())
+    .then((result) => console.log(result))
+    .catch((error) => console.log("error", error));
+
   // Simulate sending OTP via SMS here (e.g., integration with Twilio)
   return { message: "OTP sent", otp: otp.otpCode };
 };
@@ -42,6 +69,7 @@ export const login = async (phoneNumber: string) => {
 export const verifyOtp = async (phoneNumber: string, otpCode: string) => {
   const userRepository = AppDataSource.getRepository(User);
   const otpRepository = AppDataSource.getRepository(Otp);
+  const userTestResultRepository = AppDataSource.getRepository(UserTestResult);
 
   // Fetch the most recent OTP for the provided phone number
   const otp = await otpRepository.findOne({
@@ -89,17 +117,38 @@ export const verifyOtp = async (phoneNumber: string, otpCode: string) => {
     { expiresIn: "30d" }
   );
 
-  return { message: user ? "Welcome back!" : "User created", token, user };
+  // Fetch the latest test result for the user
+  const lastTestResult = await userTestResultRepository.findOne({
+    where: { userId: user.id },
+    order: { createdAt: "DESC" }, // Order by the most recent
+  });
+
+  const userData = { ...user, lastTestResult };
+  return {
+    message: user ? "Welcome back!" : "User created",
+    token,
+    user: userData,
+  };
 };
 
-export const getMe = (user: any) => {
+export const getMe = async (user: any) => {
+  const userTestResultRepository = AppDataSource.getRepository(UserTestResult);
   const userRepository = AppDataSource.getRepository(User);
-  const foundUser = userRepository.findOne({
+
+  const foundUser = await userRepository.findOne({
     where: { id: user.id },
   });
+
+  const lastTestResult = await userTestResultRepository.findOne({
+    where: { userId: user.id },
+    order: { createdAt: "DESC" }, // Order by the most recent
+  });
+
+  const userData = { ...foundUser, lastTestResult };
+
   if (!foundUser) {
     throw new Error("User not found!");
   } else {
-    return foundUser;
+    return userData;
   }
 };

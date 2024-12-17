@@ -97,7 +97,6 @@ export const deleteTestById = async (id: number) => {
     // Finally, delete the test itself
     await testRepository.remove(test);
 
-    console.log(`Successfully deleted test with ID: ${id}`);
     return {
       message: "Test deleted successfully",
       data: test, // Consider returning the deleted test object or just the message.

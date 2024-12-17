@@ -3,9 +3,9 @@ import { User } from "../entities/User";
 import { Book } from "../entities/Book";
 import { UserBook } from "../entities/UserBook";
 import { Test } from "../entities/Test";
-import { Skill } from "../entities/Skill";
+import { Skill, SkillType } from "../entities/Skill";
 import { Part } from "../entities/Part";
-import { Question } from "../entities/Question";
+import { Question, QuestionType } from "../entities/Question";
 import { getIeltsBand } from "../utils/calculateBand";
 import { UserTestResult } from "../entities/UserTestResults";
 import { DeepPartial } from "typeorm";
@@ -25,10 +25,12 @@ export function encrypt(text: string): string {
   encrypted += cipher.final("hex");
   return `${iv.toString("hex")}:${encrypted}`;
 }
+
 const encryptQuestions = (questions: Question[]) => {
   return questions.map((q) => ({
     ...q,
     questionText: q.questionText ? encrypt(q.questionText) : null,
+    correctAnswers: q.correctAnswers ? encrypt(q.correctAnswers) : null,
     options: q.options?.map((option) => (option ? encrypt(option) : null)),
   }));
 };
@@ -183,8 +185,15 @@ const getClientParts = async (skillId: number, user: any) => {
   return parts.map((part) => ({
     ...part,
     questions: encryptQuestions(
-      part.questions.map(({ correctAnswers, ...question }) => question)
-    ),
+      part.questions.map((question) => {
+        // Only remove `correctAnswers` if the question type is not MATCHING_ITEMS
+        if (question.questionType !== QuestionType.MATCHING_ITEMS) {
+          const { correctAnswers, ...restOfQuestion } = question;
+          return restOfQuestion;
+        }
+        return question;
+      })
+    ).reverse(),
   }));
 };
 
@@ -215,42 +224,65 @@ const submitClientQuestions = async (
 
   const questions = await questionRespository.find({
     where: { part: { skill: { test: { id: testId } } } },
+    relations: ["part", "part.skill"],
   });
+
+  // Group the answers by skill type and then by part
+  const groupedAnswers: Record<SkillType, any> = {
+    [SkillType.READING]: [],
+    [SkillType.LISTENING]: [],
+    [SkillType.WRITING]: null,
+  };
 
   answers.forEach((answer: any) => {
     const question = questions.find((item) => item.id === answer.questionId);
     if (!question)
       throw Error(`Question with id ${answer.questionId} not found.`);
 
-    let isCorrect = false;
+    // Find the corresponding skill and part for each answer
+    const skillType: SkillType = question.part.skill.skillType;
+    const partId = question.part.id;
+
+    // If the part does not exist in the group for the skillType, initialize it
+    if (!groupedAnswers[skillType]) {
+      groupedAnswers[skillType] = [];
+    }
+    let part = groupedAnswers[skillType].find((p: any) => p.partId === partId);
+    if (!part) {
+      part = {
+        partId,
+        questions: [],
+      };
+      groupedAnswers[skillType].push(part);
+    }
 
     // Normalize the correctAnswers and userAnswer
     const correctAnswersArray = question.correctAnswers?.includes(",")
       ? question.correctAnswers
           .split(",")
-          .map((item) => item.trim())
+          .map((item) => item.trim().toLowerCase())
           .sort()
-      : [question.correctAnswers?.trim()];
+      : [question.correctAnswers?.trim().toLowerCase()];
 
     const userAnswersArray = answer.answer.includes(",")
       ? answer.answer
           .split(",")
-          .map((item: any) => item.trim())
+          .map((item: any) => item.trim().toLowerCase())
           .sort()
-      : [answer.answer.trim()];
+      : [answer.answer.trim().toLowerCase()];
 
-    // Compare the normalized arrays as strings
+    let isCorrect = false;
     if (
       JSON.stringify(correctAnswersArray) === JSON.stringify(userAnswersArray)
     ) {
-      if (answer.skillType === "READING") readingCorrectCounts += 1;
-      if (answer.skillType === "LISTENING") listeningCorrectCounts += 1;
       isCorrect = true;
+      if (skillType === SkillType.READING) readingCorrectCounts += 1;
+      if (skillType === SkillType.LISTENING) listeningCorrectCounts += 1;
     }
 
-    resultAnswers.push({
+    part.questions.push({
       questionId: question.id,
-      isCorrect: isCorrect,
+      isCorrect,
       correctAnswer: question.correctAnswers!,
       userAnswer: answer.answer,
     });
@@ -259,23 +291,33 @@ const submitClientQuestions = async (
   const readingBand = getIeltsBand(readingCorrectCounts, "READING");
   const listeningBand = getIeltsBand(listeningCorrectCounts, "LISTENING");
 
+  // Prepare result structure for saving
   const result = userTestResultRepository.create({
     answers: resultAnswers,
     userId,
     testId,
     listeningBand,
     readingBand,
+    readingResults: groupedAnswers.READING,
+    listeningResults: groupedAnswers.LISTENING,
   } as DeepPartial<UserTestResult>);
 
   const user = await userRespository.findOne({ where: { id: userId } });
-
-  if (user) user.lastTestResultId = result.id;
+  if (user) user.lastTest = result.id;
   else throw Error("User not found");
 
   // Save the created result to the database
   await userTestResultRepository.save(result);
 
-  return result;
+  return {
+    // answers: resultAnswers,
+    userId,
+    testId,
+    listeningBand,
+    readingBand,
+    readingResults: groupedAnswers.READING,
+    listeningResults: groupedAnswers.LISTENING,
+  };
 };
 
 export {
