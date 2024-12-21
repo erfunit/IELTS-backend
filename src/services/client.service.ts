@@ -206,6 +206,7 @@ const submitClientQuestions = async (
   const testRespository = AppDataSource.getRepository(Test);
   const questionRespository = AppDataSource.getRepository(Question);
   const userTestResultRepository = AppDataSource.getRepository(UserTestResult);
+  const partRepository = AppDataSource.getRepository(Part);
 
   const resultAnswers: {
     questionId: number;
@@ -251,8 +252,11 @@ const submitClientQuestions = async (
     if (!part) {
       part = {
         partId,
+        passageOrAudio:
+          question.part.passageOrPrompt || question.part.audioUrl || "",
         questions: [],
       };
+
       groupedAnswers[skillType].push(part);
     }
 
@@ -281,6 +285,7 @@ const submitClientQuestions = async (
     }
 
     part.questions.push({
+      questionText: question.questionText,
       questionId: question.id,
       isCorrect,
       correctAnswer: question.correctAnswers!,

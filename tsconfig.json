@@ -1,14 +1,20 @@
 {
   "compilerOptions": {
-    "target": "ES6",
-    "module": "commonjs",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "strictPropertyInitialization": false,
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
-  }
+    "target": "ES2017", // Target modern JavaScript for Node.js compatibility
+    "module": "commonjs", // CommonJS modules for Node.js
+    "outDir": "./dist", // Transpiled files go to the dist folder
+    "rootDir": "./src", // Source files are in the src folder
+    "strict": true, // Enable strict type checking
+    "moduleResolution": "node", // Resolve modules in Node.js style
+    "esModuleInterop": true, // Enable interoperability with CommonJS modules
+    "skipLibCheck": true, // Skip type checks for library files
+    "resolveJsonModule": true, // Allow importing JSON files
+    "experimentalDecorators": true, // Enable decorators (required for TypeORM)
+    "emitDecoratorMetadata": true, // Emit metadata for decorators (required for TypeORM)
+    "allowSyntheticDefaultImports": true, // Allow default imports from modules without a default export
+    "forceConsistentCasingInFileNames": true, // Ensure consistent casing in file names
+    "strictPropertyInitialization": false // Disable strict checks for property initialization
+  },
+  "include": ["src"], // Include all files in the src folder
+  "exclude": ["node_modules", "dist", "**/*.test.ts"] // Exclude unnecessary files
 }

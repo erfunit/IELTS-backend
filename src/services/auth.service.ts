@@ -33,37 +33,17 @@ export const login = async (phoneNumber: string) => {
   const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
   // Set OTP with a 5-minute expiry (maxAge is 300 seconds)
-  const otp = otpRepository.create({ otpCode, phoneNumber, maxAge: 300 });
+  const otp = otpRepository.create({ otpCode, phoneNumber, maxAge: 600 });
   await otpRepository.save(otp);
 
-  var myHeaders = new Headers();
-  myHeaders.append("Content-Type", "application/json");
-  myHeaders.append("Accept", "text/plain");
-  myHeaders.append("x-api-key", process.env.SMS_API_KEY!);
+  console.log("Saved OTP:", otp);
 
-  var raw = JSON.stringify({
-    mobile: phoneNumber,
-    templateId: 541466,
-    parameters: [
-      { name: "code", value: otp.otpCode },
-      // { name: "PARAMETER2", value: "000000" },
-    ],
-  });
-
-  const requestOptions: RequestInit = {
-    method: "POST",
-    headers: myHeaders,
-    body: raw,
-    redirect: "follow",
-  };
-
-  fetch("https://api.sms.ir/v1/send/verify", requestOptions)
-    .then((response) => response.text())
-    .then((result) => console.log(result))
-    .catch((error) => console.log("error", error));
+  fetch(
+    `https://api.kavenegar.com/v1/7376776B766665366272747277564E673053394C75367937417062413561734177486B384A5774683976553D/verify/lookup.json?receptor=${phoneNumber}&token=${otp.otpCode}&template=login`
+  );
 
   // Simulate sending OTP via SMS here (e.g., integration with Twilio)
-  return { message: "OTP sent", otp: otp.otpCode };
+  return { message: "OTP sent" };
 };
 
 export const verifyOtp = async (phoneNumber: string, otpCode: string) => {
@@ -88,7 +68,26 @@ export const verifyOtp = async (phoneNumber: string, otpCode: string) => {
   const currentTime = new Date();
   const otpAgeInSeconds =
     (currentTime.getTime() - otp.createdAt.getTime()) / 1000;
-  if (otpAgeInSeconds > otp.maxAge) {
+  console.log("------------------");
+
+  console.log({
+    otpCreatedAt: otp.createdAt,
+    serverCurrentTime: currentTime,
+  });
+
+  console.log("------------------");
+  console.log({
+    otpAgeInSeconds,
+    otpAge: otp.maxAge,
+  });
+
+  const serverTime = new Date();
+  const otpCreatedTime = new Date(otp.createdAt);
+  const adjustedOtpAgeInSeconds =
+    (serverTime.getTime() - otpCreatedTime.getTime() - 3.5 * 60 * 60 * 1000) /
+    1000;
+
+  if (adjustedOtpAgeInSeconds > otp.maxAge) {
     otp.isExpired = true;
     await otpRepository.save(otp); // Mark as expired
     throw new Error("This OTP has expired.");
